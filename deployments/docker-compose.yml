@@ -1,0 +1,69 @@
+version: "3.6"
+services:
+  api_ddd:
+    container_name: ${API_CONTAINER_NAME}
+    build:
+      context: ../
+      dockerfile: deployments/Dockerfile
+    image: ${IMAGE_NAME_API}:0.5
+    depends_on:
+      - api_db
+      - api_jd
+    volumes:
+      - ../app:/usr/src/app:ro
+      - ${DOWNLOAD_VOLUME}:/descargas
+      - ${FILMS_VOLUME}:/peliculas
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: python app.py
+    restart: always
+
+  api_db:
+    container_name: ${MYSQL_CONTAINER_NAME}
+    image: mysql:5.7
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      TZ: ${TIMEZONE}
+    expose:
+      - 3306
+    volumes:
+      - ${DOCKER_DIRECTORY}/${COMPOSE_PROJECT_NAME}/${MYSQL_CONTAINER_NAME}/mysql:/var/lib/mysql
+      - ../data/sql/dbpeliculas.sql:/docker-entrypoint-initdb.d/dbpeliculas.sql:ro
+    restart: always
+
+  api_jd:
+    container_name: ${MYJD_DEVICE_NAME}
+    image: jaymoulin/jdownloader:latest
+    user: ${USER_ID}:${GROUP_ID}
+    volumes:
+        - /etc/localtime:/etc/localtime:ro
+        - ${DOWNLOAD_VOLUME}:/opt/JDownloader/Downloads
+        - ${DOCKER_DIRECTORY}/${COMPOSE_PROJECT_NAME}/${MYJD_DEVICE_NAME}/config:/opt/JDownloader/cfg
+        - ${DOCKER_DIRECTORY}/${COMPOSE_PROJECT_NAME}/${MYJD_DEVICE_NAME}/logs:/opt/JDownloader/logs
+    environment:
+        MYJD_USER: ${MYJD_USER}
+        MYJD_PASSWORD: ${MYJD_PASSWORD}
+        MYJD_DEVICE_NAME: ${MYJD_DEVICE_NAME}
+        XDG_DOWNLOAD_DIR: /opt/JDownloader/Downloads
+        LANG: es_ES.UTF-8
+        LANGUAGE: es_ES:es
+    ports:
+        - 3129:3129
+    restart: always
+    
+  tautulli:
+    container_name: ${TAUTULLI_CONTAINER_NAME}
+    image: tautulli/tautulli:latest
+    volumes:
+      - "${SCRIPTS_DIRECTORY}:/scripts:ro"
+      - "${TAUTULLI_DIRECTORY}/TautulliConfig:/config"
+      - "${TAUTULLI_DIRECTORY}/Logs:/plex_logs"
+    environment:
+      - PUID=1027
+      - PGID=100
+      - TZ=Europe/Madrid
+    ports:
+      - 8181:8181
