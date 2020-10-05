@@ -1,5 +1,5 @@
 telepot==12.7
-mysql-connector-python==8.0.19
-python-dotenv==0.12.0
-requests==2.23.0
-myjdapi==1.0.5
+mysql-connector-python==8.0.21
+python-dotenv==0.14.0
+requests==2.24.0
+myjdapi==1.0.6
