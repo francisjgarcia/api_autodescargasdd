@@ -1,6 +1,6 @@
-FROM python:2.7-slim
+FROM python:3.8.5-slim-buster
 
-LABEL version="0.5"
+LABEL version="1.0"
 
 LABEL maintainer Francis J. Garcia <francisjgarcia94@gmail.com>
 
