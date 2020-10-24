@@ -12,8 +12,8 @@ services:
     volumes:
       - ../app:/usr/src/app:ro
       - ${DOWNLOAD_VOLUME}:/downloads
-      - ${FILMS_VOLUME_FULLHD}:/movies_fullhd
-      - ${FILMS_VOLUME_4K}:/movies_4k
+      - ${MOVIES_VOLUME_FULLHD}:/movies_fullhd
+      - ${MOVIES_VOLUME_4K}:/movies_4k
     environment:
       - PYTHONUNBUFFERED=1
     command: python app.py
@@ -31,7 +31,7 @@ services:
     ports:
       - "${DB_EXPOSE_PORT}:3306"
     volumes:
-      - ${DOCKER_DIRECTORY}/${COMPOSE_PROJECT_NAME}/ddd_database/mysql:/var/lib/mysql
+      - ../container_data/ddd_database/mysql:/var/lib/mysql
       - ../data/sql/dbmovies.sql:/docker-entrypoint-initdb.d/${DB_DATABASE}.sql:ro
     healthcheck:
       test: ["CMD", "mysqlshow", "${DB_DATABASE}", "--user=${DB_USER}", "--password=${DB_PASSWORD}"]
@@ -43,12 +43,12 @@ services:
   myjdownloader:
     container_name: myjdownloader
     image: jaymoulin/jdownloader:latest
-    user: ${MYJD_USER_ID}:${MYJD_GROUP_ID}
+    user: ${PLEX_USER_ID}:${PLEX_GROUP_ID}
     volumes:
       - /etc/localtime:/etc/localtime:ro
+      - ../container_data/myjdownloader/config:/opt/JDownloader/cfg
+      - ../container_data/myjdownloader/logs:/opt/JDownloader/logs
       - ${DOWNLOAD_VOLUME}:/opt/JDownloader/Downloads
-      - ${DOCKER_DIRECTORY}/${COMPOSE_PROJECT_NAME}/${MYJD_DEVICE_NAME}/config:/opt/JDownloader/cfg
-      - ${DOCKER_DIRECTORY}/${COMPOSE_PROJECT_NAME}/${MYJD_DEVICE_NAME}/logs:/opt/JDownloader/logs
     environment:
       - MYJD_USER=${MYJD_USER}
       - MYJD_PASSWORD=${MYJD_PASSWORD}
@@ -64,11 +64,11 @@ services:
     container_name: tautulli
     image: tautulli/tautulli:latest
     volumes:
-      - "${PLEX_DIRECTORY}/TautulliConfig:/config"
-      - "${PLEX_DIRECTORY}/Logs:/plex_logs"
+      - ${PLEX_DIRECTORY}/TautulliConfig:/config
+      - ${PLEX_DIRECTORY}/Logs:/plex_logs
     environment:
-      - PUID=${TAUTULLI_USER_ID}
-      - PGID=${TAUTULLI_GROUP_ID}
+      - PUID=${PLEX_USER_ID}
+      - PGID=${PLEX_GROUP_ID}
       - TZ=${TAUTULLI_TIMEZONE}
     ports:
       - ${TAUTULLI_EXPOSE_PORT}:8181
