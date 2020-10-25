@@ -65,6 +65,9 @@ message_error_5 = "🔥 <b>Error Enlaces (DescargasDD) </b> \n Ha sucedido un er
 # Other variables
 synopsis_button = "Sinopsis"
 download_button = "Descargar"
+# Plex options
+plex_user_id = int(os.getenv("PLEX_USER_ID"))
+plex_group_id = int(os.getenv("PLEX_GROUP_ID"))
 
 def main():
     # Check if the connection to the database is successful.
@@ -213,7 +216,6 @@ def notification_bot(movie_title, movie_link, movie_quality, quality_name):
 
 def download_bot(msg):
     def download_content():
-        telegram_message_id = int(msg['id'])
         telegram_message_data = int(msg['data'])
         telegram_user_id = int(msg['from']['id'])
         telegram_user_name = str(msg['from']['first_name'])
@@ -237,108 +239,106 @@ def download_bot(msg):
             telegram_message = result[2]
             cursor.close()
             connection.close()
-            # telegram_download_bot.answerCallbackQuery(telegram_message_id, text=telegram_message)
             if movie_state == 1:
                 search_telegram_user(movie_link, telegram_user_id, telegram_user_name, telegram_user_last_name, 1)
                 print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] " + telegram_user_name + " quiere descargar la película: " + movie_title + ", pero hay un error con estos enlaces.")
-                try:
-                    connection = mysql.connector.connect(**database_connection)
-                    cursor = connection.cursor()
-                    sql = "SELECT COUNT(" + table_history + ".id) FROM " + table_history + " WHERE " + table_history + ".user_id = %d AND " % (telegram_user_id) + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = 1"
-                    cursor.execute(sql)
-                    count_notify_1 = cursor.fetchone()[0]
-                    if count_notify_1 == 1:
-                        telegram_notify_bot.sendMessage(telegram_user_id, "¡Hubo un error al intentar descargar la película <b> " + movie_title + "</b>, pero se avisó al administrador para añadirla manualmente.", parse_mode='HTML')
-                    else:
-                        if count_notify_1 == 2:
-                            count_message = "No te preocupes, aunque haya habido un error, en cuanto se descargue la película <b>" + movie_title + "</b> yo te avisaré."
-                        elif count_notify_1 == 3:
-                            count_message = "Por más que insistas, hasta que no se añada la película <b>" + movie_title + "</b> manualmente, no se empezará a descargar."
-                        elif count_notify_1 == 4:
-                            count_message = "¿Crees que estoy descansando? ¡Estoy intentando hacerlo lo más rápido posible para descargar la película <b>" + movie_title + "</b>!"
-                        elif count_notify_1 == 5:
-                            count_message = "¡Vete a la mierda!"
-                        elif count_notify_1 == 6:
-                            count_notify_1 = "Paso de ti."
-                        elif count_notify_1 >= 7:
-                            random_message = ['Patata', 'Manzana', 'Acelgas', 'Vinagre', 'Avellana', 'Alubias', 'Sandía', 'Sardinas', 'Pipas']
-                            count_message = random.choice(random_message)
-                        telegram_notify_bot.sendMessage(telegram_user_id, count_message, parse_mode='HTML')
-                    cursor.close()
-                    connection.close()
-                except:
-                    telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
-                    raise
+                # try:
+                #     connection = mysql.connector.connect(**database_connection)
+                #     cursor = connection.cursor()
+                #     sql = "SELECT COUNT(" + table_history + ".id) FROM " + table_history + " WHERE " + table_history + ".user_id = %d AND " % (telegram_user_id) + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = 1"
+                #     cursor.execute(sql)
+                #     count_notify_1 = cursor.fetchone()[0]
+                #     if count_notify_1 == 1:
+                #         telegram_notify_bot.sendMessage(telegram_user_id, "¡Hubo un error al intentar descargar la película <b> " + movie_title + "</b>, pero se avisó al administrador para añadirla manualmente.", parse_mode='HTML')
+                #     else:
+                #         if count_notify_1 == 2:
+                #             count_message = "No te preocupes, aunque haya habido un error, en cuanto se descargue la película <b>" + movie_title + "</b> yo te avisaré."
+                #         elif count_notify_1 == 3:
+                #             count_message = "Por más que insistas, hasta que no se añada la película <b>" + movie_title + "</b> manualmente, no se empezará a descargar."
+                #         elif count_notify_1 == 4:
+                #             count_message = "¿Crees que estoy descansando? ¡Estoy intentando hacerlo lo más rápido posible para descargar la película <b>" + movie_title + "</b>!"
+                #         elif count_notify_1 == 5:
+                #             count_message = "¡Vete a la mierda!"
+                #         elif count_notify_1 == 6:
+                #             count_notify_1 = "Paso de ti."
+                #         elif count_notify_1 >= 7:
+                #             random_message = ['Patata', 'Manzana', 'Acelgas', 'Vinagre', 'Avellana', 'Alubias', 'Sandía', 'Sardinas', 'Pipas']
+                #             count_message = random.choice(random_message)
+                #         telegram_notify_bot.sendMessage(telegram_user_id, count_message, parse_mode='HTML')
+                #     cursor.close()
+                #     connection.close()
+                # except:
+                #     telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
+                #     raise
             elif movie_state == 2:
                 scrapy_download_url(movie_link, movie_title, telegram_user_id, telegram_user_name, telegram_user_last_name)
             elif movie_state == 3:
                 search_telegram_user(movie_link, telegram_user_id, telegram_user_name, telegram_user_last_name, 3)
                 print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] " + telegram_user_name + " quiere descargar la película: " + movie_title + ", pero ya está en proceso de descarga.")
-                try:
-                    connection = mysql.connector.connect(**database_connection)
-                    cursor = connection.cursor()
-                    sql = "SELECT COUNT(" + table_history + ".id) FROM " + table_history + " WHERE " + table_history + ".user_id = %d AND " % (telegram_user_id) + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = 3"
-                    cursor.execute(sql)
-                    count_notify_3 = cursor.fetchone()[0]
-                    if count_notify_3 == 1:
-                        telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nLa película <b> " + movie_title + "</b> ya se estaba descargando.\nEn cuanto finalice la descarga, te avisaré.", parse_mode='HTML')
-                    else:
-                        if count_notify_3 == 2:
-                            count_message = "Que sí... que quieres descargar la película <b>" + movie_title + "</b>, ya lo sé."
-                        elif count_notify_3 == 3:
-                            count_message = "Por más veces que me lo digas, no se va a descargar más rápido la película <b>" + movie_title + "</b>."
-                        elif count_notify_3 == 4:
-                            count_message = "¿Cuántas veces me vas a decir que te quieres descargar la película <b>" + movie_title + "</b>? Ya te avisaré cuando esté disponible."
-                        elif count_notify_3 == 5:
-                            count_message = "¡Ya me he enterado de que quieres descargar la película <b>" + movie_title + "</b>! ¡No insistas!"
-                        elif count_notify_3 == 6:
-                            count_message = "¡Vete a la mierda!"
-                        elif count_notify_3 == 7:
-                            count_message = "Paso de ti."
-                        elif count_notify_3 >= 8:
-                            random_message = ['Patata', 'Manzana', 'Acelgas', 'Vinagre', 'Avellana', 'Alubias', 'Sandía', 'Sardinas', 'Pipas']
-                            count_message = random.choice(random_message)
-                        telegram_notify_bot.sendMessage(telegram_user_id, count_message, parse_mode='HTML')
-                    cursor.close()
-                    connection.close()
-                except:
-                    telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
-                    raise
+                # try:
+                #     connection = mysql.connector.connect(**database_connection)
+                #     cursor = connection.cursor()
+                #     sql = "SELECT COUNT(" + table_history + ".id) FROM " + table_history + " WHERE " + table_history + ".user_id = %d AND " % (telegram_user_id) + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = 3"
+                #     cursor.execute(sql)
+                #     count_notify_3 = cursor.fetchone()[0]
+                #     if count_notify_3 == 1:
+                #         telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nLa película <b> " + movie_title + "</b> ya se estaba descargando.\nEn cuanto finalice la descarga, te avisaré.", parse_mode='HTML')
+                #     else:
+                #         if count_notify_3 == 2:
+                #             count_message = "Que sí... que quieres descargar la película <b>" + movie_title + "</b>, ya lo sé."
+                #         elif count_notify_3 == 3:
+                #             count_message = "Por más veces que me lo digas, no se va a descargar más rápido la película <b>" + movie_title + "</b>."
+                #         elif count_notify_3 == 4:
+                #             count_message = "¿Cuántas veces me vas a decir que te quieres descargar la película <b>" + movie_title + "</b>? Ya te avisaré cuando esté disponible."
+                #         elif count_notify_3 == 5:
+                #             count_message = "¡Ya me he enterado de que quieres descargar la película <b>" + movie_title + "</b>! ¡No insistas!"
+                #         elif count_notify_3 == 6:
+                #             count_message = "¡Vete a la mierda!"
+                #         elif count_notify_3 == 7:
+                #             count_message = "Paso de ti."
+                #         elif count_notify_3 >= 8:
+                #             random_message = ['Patata', 'Manzana', 'Acelgas', 'Vinagre', 'Avellana', 'Alubias', 'Sandía', 'Sardinas', 'Pipas']
+                #             count_message = random.choice(random_message)
+                #         telegram_notify_bot.sendMessage(telegram_user_id, count_message, parse_mode='HTML')
+                #     cursor.close()
+                #     connection.close()
+                # except:
+                #     telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
+                #     raise
             elif movie_state == 4:
                 search_telegram_user(movie_link, telegram_user_id, telegram_user_name, telegram_user_last_name, 4)
                 print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] " + telegram_user_name + " quiere descargar la película: " + movie_title + ", pero ya está descargada.")
-                try:
-                    connection = mysql.connector.connect(**database_connection)
-                    cursor = connection.cursor()
-                    sql = "SELECT COUNT(" + table_history + ".id) FROM " + table_history + " WHERE " + table_history + ".user_id = %d AND " % (telegram_user_id) + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = 4"
-                    cursor.execute(sql)
-                    count_notify_4 = cursor.fetchone()[0]
-                    if count_notify_4 == 1:
-                        telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nLa película <b> " + movie_title + "</b> ya estaba descargada, la puedes ver en <b>Plex</b>.", parse_mode='HTML')
-                    else:
-                        if count_notify_4 == 2:
-                            count_message = "Por si no lo recuerdas, la película <b>" + movie_title + "</b>, ya está descargada."
-                        elif count_notify_4 == 3:
-                            count_message = "No pongas más veces la película <b>" + movie_title + "</b> a descargar porque ya lo está."
-                        elif count_notify_4 == 4:
-                            count_message = "Vaya memoria tienes... ¡Que la película <b>" + movie_title + "</b> ya la puedes ver"
-                        elif count_notify_4 == 5:
-                            count_message = "Cuántas veces te habré dicho ya de que la película <b>" + movie_title + "</b> está en Plex."
-                        elif count_notify_4 >= 6:
-                            count_message = "¡Vete a la mierda!"
-                        elif count_notify_4 == 7:
-                            count_message = "Paso de ti."
-                        elif count_notify_4 >= 8:
-                            random_message = ['Patata', 'Manzana', 'Acelgas', 'Vinagre', 'Avellana', 'Alubias', 'Sandía', 'Sardinas', 'Pipas']
-                            count_message = random.choice(random_message)
-                        telegram_notify_bot.sendMessage(telegram_user_id, count_message, parse_mode='HTML')
-                    cursor.close()
-                    connection.close()
-                except:
-                    telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
-                    raise
-                
-                telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nLa película <b> " + movie_title + "</b> ya estaba descargada, la puedes ver en <b>Plex</b>.", parse_mode='HTML')
+                # try:
+                #     connection = mysql.connector.connect(**database_connection)
+                #     cursor = connection.cursor()
+                #     sql = "SELECT COUNT(" + table_history + ".id) FROM " + table_history + " WHERE " + table_history + ".user_id = %d AND " % (telegram_user_id) + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = 4"
+                #     cursor.execute(sql)
+                #     count_notify_4 = cursor.fetchone()[0]
+                #     if count_notify_4 == 1:
+                #         telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nLa película <b> " + movie_title + "</b> ya estaba descargada, la puedes ver en <b>Plex</b>.", parse_mode='HTML')
+                #     else:
+                #         if count_notify_4 == 2:
+                #             count_message = "Por si no lo recuerdas, la película <b>" + movie_title + "</b>, ya está descargada."
+                #         elif count_notify_4 == 3:
+                #             count_message = "No pongas más veces la película <b>" + movie_title + "</b> a descargar porque ya lo está."
+                #         elif count_notify_4 == 4:
+                #             count_message = "Vaya memoria tienes... ¡Que la película <b>" + movie_title + "</b> ya la puedes ver"
+                #         elif count_notify_4 == 5:
+                #             count_message = "Cuántas veces te habré dicho ya de que la película <b>" + movie_title + "</b> está en Plex."
+                #         elif count_notify_4 >= 6:
+                #             count_message = "¡Vete a la mierda!"
+                #         elif count_notify_4 == 7:
+                #             count_message = "Paso de ti."
+                #         elif count_notify_4 >= 8:
+                #             random_message = ['Patata', 'Manzana', 'Acelgas', 'Vinagre', 'Avellana', 'Alubias', 'Sandía', 'Sardinas', 'Pipas']
+                #             count_message = random.choice(random_message)
+                #         telegram_notify_bot.sendMessage(telegram_user_id, count_message, parse_mode='HTML')
+                #     cursor.close()
+                #     connection.close()
+                # except:
+                #     telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
+                #     raise
+                # telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nLa película <b> " + movie_title + "</b> ya estaba descargada, la puedes ver en <b>Plex</b>.", parse_mode='HTML')
         except:
             telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
             raise
@@ -427,7 +427,7 @@ def scrapy_download_url(movie_link, movie_title, telegram_user_id, telegram_user
         myjdownloader(movie_link, full_url_download)
         search_telegram_user(movie_link, telegram_user_id, telegram_user_name, telegram_user_last_name, 3)
         print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] " + telegram_user_name + " quiere descargar la película: " + movie_title + ", por lo que se pone a descargar.")
-        telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nAcabo de poner a descargar la película <b> " + movie_title + "</b>.\nEn cuanto esté descargada te avsaré.", parse_mode='HTML')
+        # telegram_notify_bot.sendMessage(telegram_user_id, "¡Hola <b>" + telegram_user_name + "</b>!\nAcabo de poner a descargar la película <b> " + movie_title + "</b>.\nEn cuanto esté descargada te avsaré.", parse_mode='HTML')
     except:
         time.sleep(5)
         search_telegram_user(movie_link, telegram_user_id, telegram_user_name, telegram_user_last_name, 1)
@@ -436,7 +436,7 @@ def scrapy_download_url(movie_link, movie_title, telegram_user_id, telegram_user
             [InlineKeyboardButton(text=synopsis_button,url=post_url + str(movie_link))]
             ]
         ))
-        telegram_notify_bot.sendMessage(telegram_user_id, "Ha habido un error al intentar descargar la película: <b>" + movie_title + "</b> de forma automática...\n\nSe ha notificado al administrador y se pondrá a descargar de forma manual.\n\n<b>¡Ten paciencia!</b>", parse_mode='HTML')
+        # telegram_notify_bot.sendMessage(telegram_user_id, "Ha habido un error al intentar descargar la película: <b>" + movie_title + "</b> de forma automática...\n\nSe ha notificado al administrador y se pondrá a descargar de forma manual.\n\n<b>¡Ten paciencia!</b>", parse_mode='HTML')
 
 def myjdownloader(movie_link, full_url_download):
     jd = myjdapi.Myjdapi()
@@ -491,21 +491,25 @@ def finish_download_movie(movie_link, movie_title, movie_year, movie_quality, pa
         raise
     if pattern.match(file):
         try:
-            os.system("touch '" + path + "/" + file + "'")
-            shutil.move(path + "/" + file, directory_movies + "/" + movie_title + " (" + str(movie_year) + ")." + file_extension)
+            movie = path + "/" + file
+            full_movie = directory_movies + "/" + movie_title + " (" + str(movie_year) + ")." + file_extension
+            os.utime(movie, None)
+            shutil.move(movie, full_movie)
+            os.chown(full_movie, plex_user_id, plex_group_id)
+            os.chmod(full_movie, 0o770)
             try:
                 search_telegram_user(movie_link, None, None, None, 4)
                 print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] Se acaba de descargar la película: " + movie_title + ".")
-                connection = mysql.connector.connect(**database_connection)
-                cursor = connection.cursor()
-                search_user_download = "SELECT " + table_history + ".user_id FROM " + table_history + " WHERE " + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = %d" % (3)
-                cursor.execute(search_user_download)
-                result = cursor.fetchall()
-                for row in result:
-                    telegram_user_id = row[0]
-                    telegram_notify_bot.sendMessage(telegram_user_id, "Ya tienes disponible en Plex la película:\n<b>" + movie_title + "</b>.", parse_mode='HTML')
-                cursor.close()
-                connection.close()
+                # connection = mysql.connector.connect(**database_connection)
+                # cursor = connection.cursor()
+                # search_user_download = "SELECT " + table_history + ".user_id FROM " + table_history + " WHERE " + table_history + ".link_id = %d AND " % (movie_link) + table_history + ".state_id = %d" % (3)
+                # cursor.execute(search_user_download)
+                # result = cursor.fetchall()
+                # for row in result:
+                #     telegram_user_id = row[0]
+                #     telegram_notify_bot.sendMessage(telegram_user_id, "Ya tienes disponible en Plex la película:\n<b>" + movie_title + "</b>.", parse_mode='HTML')
+                # cursor.close()
+                # connection.close()
             except:
                 telegram_alert_bot.sendMessage(telegram_alert_id, message_error_4, parse_mode='HTML')
                 raise
