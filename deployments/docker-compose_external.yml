@@ -5,8 +5,8 @@ services:
     image: jaymoulin/jdownloader:latest
     volumes:
       - /etc/localtime:/etc/localtime:ro
-      - ../container_data/myjdownloader/config:/opt/JDownloader/cfg
-      - ../container_data/myjdownloader/logs:/opt/JDownloader/logs
+      - ../data/myjdownloader/config:/opt/JDownloader/cfg
+      - ../data/myjdownloader/logs:/opt/JDownloader/logs
       - ${MYJD_DOWNLOAD_VOLUME}:/opt/JDownloader/Downloads
     environment:
       - MYJD_USER=${MYJD_USER}
@@ -23,7 +23,7 @@ services:
     container_name: tautulli
     image: tautulli/tautulli:latest
     volumes:
-      - ../container_data/tautulli/config:/config
+      - ../data/tautulli/config:/config
       - ${TAUTULLI_PLEX_DIRECTORY}/Logs:/plex_logs
     environment:
       - PUID=${PLEX_USER_ID}

@@ -30,8 +30,8 @@ services:
     ports:
       - "${DB_EXPOSE_PORT}:3306"
     volumes:
-      - ../container_data/ddd_database/mysql:/var/lib/mysql
-      - ../data/sql/dbmovies.sql:/docker-entrypoint-initdb.d/dbmovies.sql:ro
+      - ../data/ddd_database/mysql:/var/lib/mysql
+      - ../config/sql/dbmovies.sql:/docker-entrypoint-initdb.d/dbmovies.sql:ro
     healthcheck:
       test: ["CMD", "mysqlshow", "dbmovies", "--user=${DB_USER}", "--password=${DB_PASSWORD}"]
       interval: 30s
