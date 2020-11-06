@@ -142,7 +142,7 @@ def download_dd(url, movie_quality):
                     if re.search(download_quality, line):
                         check = line.strip().split('>')
                         register = re.split('[|([][ ]{0,1}([0-9]{4})[ ]{0,1}', check[1])
-                        title_dd = str(register[0]).split('(')[0].replace(":"," -").replace("¿","").replace("?","").replace("?","").replace("4K","").replace("UHD","").rstrip()
+                        title_dd = str(register[0]).split('(')[0].replace("'","").replace(":"," -").replace("¿","").replace("?","").replace("?","").replace("4K","").replace("UHD","").rstrip()
                         year_dd = int(register[1])
                         link_dd = int(check[0].strip().split('?t=')[1].strip().split('&amp')[0])
                         # Just search for movies from this year or the previous year
