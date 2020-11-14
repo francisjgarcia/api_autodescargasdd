@@ -72,7 +72,7 @@ plex_group_id = int(os.getenv("PLEX_GROUP_ID"))
 def main():
     # Check if the connection to the database is successful.
     database_status = False
-    while database_status == False:  
+    while database_status == False:
         try:
             print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] Comprobando conexión a la base de datos...")
             connection = mysql.connector.connect(**database_connection)
@@ -89,7 +89,7 @@ def main():
             print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] La conexión con la base de datos ha sido rechazada...")
             sys.exit(1)
     print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] La conexión con la base de datos se ha realizado con éxito.")
-    
+
     # Check if the API is active
     if api_enable == 0:
         print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] La está API funcionando. Escuchando peticiones...")
@@ -138,6 +138,9 @@ def download_dd(url, movie_quality):
         for line in r.iter_lines():
             line = line.decode('ISO-8859-1')
             if re.search(thread_title, line) is None:
+                if re.search(r'class=\"magnify\"', line):
+                    check = line.strip().split('"')
+                    poster = check[3]
                 if re.search(r'thread_title', line):
                     if re.search(download_quality, line):
                         check = line.strip().split('>')
@@ -147,14 +150,15 @@ def download_dd(url, movie_quality):
                         link_dd = int(check[0].strip().split('?t=')[1].strip().split('&amp')[0])
                         # Just search for movies from this year or the previous year
                         if year_dd >= (datetime.datetime.now().year - 1):
-                            movies_list.append([title_dd,year_dd,link_dd])
+                            movies_list.append([poster,title_dd,year_dd,link_dd])
         try:
             connection = mysql.connector.connect(**database_connection)
             cursor = connection.cursor()
             for movie in movies_list:
-                movie_title = movie[0]
-                movie_year = movie[1]
-                movie_link = movie[2]
+                poster = movie[0]
+                movie_title = movie[1]
+                movie_year = movie[2]
+                movie_link = movie[3]
                 search_movie = "SELECT " + table_movies + ".id, " + table_movies + ".title FROM " + table_movies + " WHERE " + table_movies + ".title = \"%s\" LIMIT 1" % (movie_title)
                 search_quality = "SELECT " + table_quality + ".quality FROM " + table_quality + " WHERE " + table_quality + ".id = %d" % (movie_quality)
                 cursor.execute(search_quality)
@@ -189,22 +193,21 @@ def download_dd(url, movie_quality):
                     cursor.execute(sql_insert_history)
                     connection.commit()
                     print("["+time.strftime("%d/%m/%Y %H:%M:%S")+"] Nueva pelicula [" + str(quality_name) + "]: " + movie_title + ".")
-                    notification_bot(movie_title, movie_link, movie_quality, quality_name)
+                    notification_bot(poster, movie_title, movie_link, movie_quality, quality_name)
             cursor.close()
             connection.close()
         except:
             telegram_alert_bot.sendMessage(telegram_alert_id, message_error_1, parse_mode='HTML')
             raise
 
-def notification_bot(movie_title, movie_link, movie_quality, quality_name):
+def notification_bot(poster, movie_title, movie_link, movie_quality, quality_name):
     try:
         if movie_quality == 3:
             telegram_download_id = telegram_download_fullhd_id
         elif movie_quality == 4:
             telegram_download_id = telegram_download_4k_id
-        connection = mysql.connector.connect(**database_connection)
         notify_bot_message = ("🎬 <b>Nueva película</b> <b>[" + quality_name + "]</b>\n<a href=\"" + post_url + str(movie_link) + "\">" + movie_title + "</a>")
-        telegram_download_bot.sendMessage(telegram_download_id, notify_bot_message, parse_mode='HTML', disable_web_page_preview=True, reply_markup = InlineKeyboardMarkup(inline_keyboard=[
+        telegram_download_bot.sendPhoto(telegram_download_fullhd_id, poster, notify_bot_message, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=synopsis_button,url=post_url + str(movie_link))],
             [InlineKeyboardButton(text=download_button,callback_data=str(movie_link))]
             ]
