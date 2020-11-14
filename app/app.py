@@ -207,7 +207,7 @@ def notification_bot(poster, movie_title, movie_link, movie_quality, quality_nam
         elif movie_quality == 4:
             telegram_download_id = telegram_download_4k_id
         notify_bot_message = ("🎬 <b>Nueva película</b> <b>[" + quality_name + "]</b>\n<a href=\"" + post_url + str(movie_link) + "\">" + movie_title + "</a>")
-        telegram_download_bot.sendPhoto(telegram_download_fullhd_id, poster, notify_bot_message, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+        telegram_download_bot.sendPhoto(telegram_download_id, poster, notify_bot_message, parse_mode='HTML', reply_markup=InlineKeyboardMarkup(inline_keyboard=[
             [InlineKeyboardButton(text=synopsis_button,url=post_url + str(movie_link))],
             [InlineKeyboardButton(text=download_button,callback_data=str(movie_link))]
             ]
