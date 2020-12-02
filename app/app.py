@@ -57,6 +57,7 @@ directory_movies_fullhd = "/movies_fullhd"
 directory_movies_4k = "/movies_4k"
 file_extension = "mkv"
 # Telegram alerts messages
+message_error_0 = "🔥 <b>Error Web (DescargasDD) </b> \n Ha sucedido un error al intentar leer los datos desde la web."
 message_error_1 = "🔥 <b>Error Database (DescargasDD) </b> \n Ha sucedido un error al conectar con la base de datos."
 message_error_2 = "🔥 <b>Error Database (DescargasDD) </b> \n Ha sucedido un error al insertar un registro con estado 2 en la base de datos."
 message_error_3 = "🔥 <b>Error Telegram (DescargasDD) </b> \n Ha sucedido un error al notificar una nueva película en Telegram."
@@ -133,24 +134,28 @@ def download_dd(url, movie_quality):
         sys.exit(1)
     web_status_code = requests.get(web_url).status_code
     if web_status_code == 200:
-        movies_list = []
-        r = requests.get(web_url + web_forum + str(url), stream=True)
-        for line in r.iter_lines():
-            line = line.decode('ISO-8859-1')
-            if re.search(thread_title, line) is None:
-                if re.search(r'class=\"magnify\"', line):
-                    check = line.strip().split('"')
-                    poster = check[3]
-                if re.search(r'thread_title', line):
-                    if re.search(download_quality, line):
-                        check = line.strip().split('>')
-                        register = re.split('[|([][ ]{0,1}([0-9]{4})[ ]{0,1}', check[1])
-                        title_dd = str(register[0]).split('(')[0].replace("'","").replace(":"," -").replace("¿","").replace("?","").replace("?","").replace("4K","").replace("UHD","").rstrip()
-                        year_dd = int(register[1])
-                        link_dd = int(check[0].strip().split('?t=')[1].strip().split('&amp')[0])
-                        # Just search for movies from this year or the previous year
-                        if year_dd >= (datetime.datetime.now().year - 1):
-                            movies_list.append([poster,title_dd,year_dd,link_dd])
+        try:
+            movies_list = []
+            r = requests.get(web_url + web_forum + str(url), stream=True)
+            for line in r.iter_lines():
+                line = line.decode('ISO-8859-1')
+                if re.search(thread_title, line) is None:
+                    if re.search(r'class=\"magnify\"', line):
+                        check = line.strip().split('"')
+                        poster = check[3]
+                    if re.search(r'thread_title', line):
+                        if re.search(download_quality, line):
+                            check = line.strip().split('>')
+                            register = re.split('[|([][ ]{0,1}([0-9]{4})[ ]{0,1}', check[1])
+                            title_dd = str(register[0]).split('(')[0].replace("'","").replace(":"," -").replace("¿","").replace("?","").replace("?","").replace("4K","").replace("UHD","").rstrip()
+                            year_dd = int(register[1])
+                            link_dd = int(check[0].strip().split('?t=')[1].strip().split('&amp')[0])
+                            # Just search for movies from this year or the previous year
+                            if year_dd >= (datetime.datetime.now().year - 1):
+                                movies_list.append([poster,title_dd,year_dd,link_dd])
+        except:
+            telegram_alert_bot.sendMessage(telegram_alert_id, message_error_0, parse_mode='HTML')
+            raise
         try:
             connection = mysql.connector.connect(**database_connection)
             cursor = connection.cursor()
